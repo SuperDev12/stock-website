@@ -3,9 +3,11 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output, State
 from datetime import datetime as dt
+import numpy as np
 import pandas as pd
 import yfinance as yf
 import plotly.express as px
+import joblib
 
 app = dash.Dash(__name__, external_stylesheets=['styles.css']) 
 server = app.server 
@@ -40,9 +42,10 @@ app.layout = html.Div([
             dcc.Input(id='forecast-days', placeholder='Enter forecast days...', type='number', style={'margin-top': '10px'}),
             # Buttons
             html.Div([
-            html.Button('Get Stock Price', id='stock-price-button', n_clicks=0),
-            html.Button('Get Indicators', id='indicators-button', n_clicks=0),
-            html.Button('Get Forecast', id='forecast-button', n_clicks=0)])
+                html.Button('Get Stock Price', id='stock-price-button', n_clicks=0),
+                html.Button('Get Indicators', id='indicators-button', n_clicks=0),
+                html.Button('Get Forecast', id='forecast-button', n_clicks=0)
+            ])
             
         ],
         className="nav"
@@ -107,6 +110,9 @@ def update_data(n_clicks, stock_code, start_date, end_date, forecast_days):
         # Fetch stock data for the given date range
         stock_data = ticker.history(start=start_date, end=end_date)
 
+        # Calculate EMA
+        stock_data['EWA_20'] = stock_data['Close'].ewm(span=20, adjust=False).mean()
+
         # Placeholder data for stock price plot
         stock_price_plot = {
             'data': [
@@ -117,13 +123,13 @@ def update_data(n_clicks, stock_code, start_date, end_date, forecast_days):
             }
         }
 
-        # Placeholder data for indicator plot
+        # Indicator plot with EMA
         indicator_plot = {
             'data': [
-                {'x': [1, 2, 3, 4], 'y': [10, 15, 13, 17], 'type': 'bar', 'name': 'Indicator Data'}
+                {'x': stock_data.index, 'y': stock_data['EWA_20'], 'type': 'line', 'name': 'EMA_20'}
             ],
             'layout': {
-                'title': 'Indicator Plot'
+                'title': 'Indicator Plot with EMA'
             }
         }
 
@@ -140,6 +146,7 @@ def update_data(n_clicks, stock_code, start_date, end_date, forecast_days):
         return description, company_name, stock_price_plot, indicator_plot, forecast_plot
     else:
         return '', '', {}, {}, {}
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
