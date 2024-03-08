@@ -3,7 +3,9 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output, State
 from datetime import datetime as dt
+import pandas as pd
 import yfinance as yf
+import plotly.express as px
 
 app = dash.Dash(__name__, external_stylesheets=['styles.css']) 
 server = app.server 
@@ -37,9 +39,11 @@ app.layout = html.Div([
             # Number of days of forecast input
             dcc.Input(id='forecast-days', placeholder='Enter forecast days...', type='number', style={'margin-top': '10px'}),
             # Buttons
+            html.Div([
             html.Button('Get Stock Price', id='stock-price-button', n_clicks=0),
             html.Button('Get Indicators', id='indicators-button', n_clicks=0),
-            html.Button('Get Forecast', id='forecast-button', n_clicks=0)
+            html.Button('Get Forecast', id='forecast-button', n_clicks=0)])
+            
         ],
         className="nav"
     ),
@@ -58,23 +62,13 @@ app.layout = html.Div([
             html.Div(
                 [
                     # Stock price plot
-                    dcc.Graph(id='stock-price-plot')
-                ],
-                id="graphs-content"
-            ),
-            html.Div(
-                [
+                    dcc.Graph(id='stock-price-plot'),
                     # Indicator plot
-                    dcc.Graph(id='indicator-plot')
-                ],
-                id="main-content"
-            ),
-            html.Div(
-                [
+                    dcc.Graph(id='indicator-plot'),
                     # Forecast plot
                     dcc.Graph(id='forecast-plot')
                 ],
-                id="forecast-content"
+                id="graphs-content"
             )
         ],
         className="container"
@@ -82,26 +76,33 @@ app.layout = html.Div([
 ])
 
 @app.callback(
-    Output('description', 'children'),
-    Output('company-name', 'children'),
-    Output('stock-price-plot', 'figure'),
-    Output('indicator-plot', 'figure'),
-    Output('forecast-plot', 'figure'),
-    Input('submit-button', 'n_clicks'),
-    State('stock-code', 'value'),
-    State('date-range', 'start_date'),
-    State('date-range', 'end_date'),
-    State('forecast-days', 'value')
+    [
+        Output('description', 'children'),
+        Output('company-name', 'children'),
+        Output('stock-price-plot', 'figure'),
+        Output('indicator-plot', 'figure'),
+        Output('forecast-plot', 'figure')
+    ],
+    [
+        Input('submit-button', 'n_clicks')
+    ],
+    [
+        State('stock-code', 'value'),
+        State('date-range', 'start_date'),
+        State('date-range', 'end_date'),
+        State('forecast-days', 'value')
+    ]
 )
 def update_data(n_clicks, stock_code, start_date, end_date, forecast_days):
-    if n_clicks > 0 and stock_code:
+    if n_clicks and stock_code:
         # Fetch company data using yfinance library
         ticker = yf.Ticker(stock_code)
-        company_data = ticker.info
+        inf = ticker.info
+        df_info = pd.DataFrame().from_dict(inf, orient="index").T
 
         # Extract company name and description
-        company_name = company_data.get('longName', 'Company Name')
-        description = company_data.get('longBusinessSummary', 'Company Description')
+        company_name = df_info.get('longName', 'Company Name')
+        description = df_info.get('longBusinessSummary', 'Company Description')
 
         # Fetch stock data for the given date range
         stock_data = ticker.history(start=start_date, end=end_date)
