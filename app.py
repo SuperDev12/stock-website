@@ -8,6 +8,16 @@ import pandas as pd
 import yfinance as yf
 import plotly.express as px
 import joblib
+# Load the SVR model
+svr_model = joblib.load('/Users/superdev/Desktop/stock website/AAPL_svr_model.pkl')
+svr_model = joblib.load('/Users/superdev/Desktop/stock website/AMZN_svr_model.pkl')
+svr_model = joblib.load('/Users/superdev/Desktop/stock website/GOOGL_svr_model.pkl')
+svr_model = joblib.load('/Users/superdev/Desktop/stock website/INTC_svr_model.pkl')
+svr_model = joblib.load('/Users/superdev/Desktop/stock website/JPM_svr_model.pkl')
+svr_model = joblib.load('/Users/superdev/Desktop/stock website/MSFT_svr_model.pkl')
+svr_model = joblib.load('/Users/superdev/Desktop/stock website/PG_svr_model.pkl')
+svr_model = joblib.load('/Users/superdev/Desktop/stock website/TSLA_svr_model.pkl')
+svr_model = joblib.load('/Users/superdev/Desktop/stock website/V_svr_model.pkl')
 
 app = dash.Dash(__name__, external_stylesheets=['styles.css']) 
 server = app.server 
